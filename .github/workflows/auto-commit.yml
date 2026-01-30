@@ -1,0 +1,32 @@
+name: Auto Commit Twice a Day
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make change
+        run: |
+          echo "Last update: $(date)" > heartbeat.txt
+
+      - name: Pick random commit message
+        id: msg
+        run: |
+          MESSAGE=$(shuf -n 1 commit-messages.txt)
+          echo "message=$MESSAGE" >> $GITHUB_OUTPUT
+
+      - name: Commit and push
+        run: |
+          git config user.name "pasha52br"
+          git config user.email "pasha52bru@ukr.net"
+          git add heartbeat.txt
+          git commit -m "${{ steps.msg.outputs.message }}" || exit 0
+          git push
